@@ -1,0 +1,19 @@
+﻿@{
+    ViewBag.Title = "UserGallery";
+}
+
+<h2>UserGallery</h2>
+
+@model IList<UserAuthNew.Models.Image>
+
+<ul class="thumbnail">
+    @foreach (var item in Model)
+    {
+        <td class="item">
+            <a href=@item.PhotoUrl>
+                <img alt="@item.UserId" src="@item.PhotoUrl" height="300" />
+            </a>
+        </td>
+    }
+</ul>
+

@@ -1,0 +1,12 @@
+﻿@using System.Drawing
+@model IList<UserAuthNew.Models.Image>
+@{
+    ViewBag.Title = "UserProfile";
+}
+
+@using (Html.BeginForm("ImageUpload", "Account", FormMethod.Post, new { enctype = "multipart/form-data" }))
+{
+    <label for="file">Upload Image from PC:</label>
+    <input name="file" type="file" id="file" style="width: 100%;" />
+    <input type="submit" value="Upload" class="submit" />
+}
