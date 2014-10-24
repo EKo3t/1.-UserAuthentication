@@ -201,6 +201,7 @@
     <Content Include="App_Data\UserAuthNew_log.ldf">
       <DependentUpon>UserAuthNew.mdf</DependentUpon>
     </Content>
+    <Content Include="Images\a03.png" />
     <Content Include="Images\elite-daily-busty.jpg" />
     <Content Include="Content\bootstrap-theme.css" />
     <Content Include="Content\bootstrap-theme.min.css" />
@@ -278,12 +279,23 @@
     <None Include="Scripts\jquery-1.9.0-vsdoc.js" />
     <Content Include="Scripts\jquery-ui-1.8.24.js" />
     <Content Include="Scripts\jquery-ui-1.8.24.min.js" />
+    <Content Include="Scripts\jquery.image-gallery.min.js" />
     <Content Include="Scripts\jquery.unobtrusive-ajax.js" />
     <Content Include="Scripts\jquery.unobtrusive-ajax.min.js" />
     <Content Include="Scripts\jquery.validate.js" />
     <Content Include="Scripts\jquery.validate.min.js" />
     <Content Include="Scripts\jquery.validate.unobtrusive.js" />
     <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
+    <Content Include="Scripts\js\jquery-1.9.1.min.js" />
+    <Content Include="Scripts\js\jssor.js" />
+    <Content Include="Scripts\js\jssor.player.ytiframe.js" />
+    <Content Include="Scripts\js\jssor.player.ytiframe.min.js" />
+    <Content Include="Scripts\js\jssor.slider.debug.min.js" />
+    <Content Include="Scripts\js\jssor.slider.js" />
+    <Content Include="Scripts\js\jssor.slider.min.js" />
+    <Content Include="Scripts\js\jssor.slider.mini.js" />
+    <Content Include="Scripts\js\jssor.sliderc.mini.js" />
+    <Content Include="Scripts\js\jssor.sliders.mini.js" />
     <Content Include="Scripts\knockout-2.2.0.debug.js" />
     <Content Include="Scripts\knockout-2.2.0.js" />
     <Content Include="Scripts\modernizr-2.6.2.js" />
@@ -329,10 +341,15 @@
     <Content Include="Views\Account\UserProfile.cshtml" />
     <Content Include="Views\Account\UserGallery.cshtml" />
     <Content Include="Views\Account\ImportSiteOBoobs.cshtml" />
+    <Content Include="Scripts\js\jssor.player.ytiframe.compress.bat" />
+    <Content Include="Scripts\js\jssor.slider.debug.min.compress.bat" />
+    <Content Include="Scripts\js\jssor.slider.min.compress.bat" />
+    <Content Include="Scripts\js\jssor.slider.mini.compress.bat" />
+    <Content Include="Scripts\js\jssor.sliderc.mini.compress.bat" />
+    <Content Include="Scripts\js\jssor.sliders.mini.compress.bat" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Images\Temp\" />
-    <Folder Include="Styles\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
