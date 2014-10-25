@@ -3,11 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Mail;
+using System.Runtime.Serialization.Json;
 using System.Security.Policy;
 using System.Transactions;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Security;
+using System.Web.UI.WebControls.Expressions;
+using System.Web.UI.WebControls.WebParts;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using DotNetOpenAuth.AspNet;
@@ -15,6 +19,7 @@ using Microsoft.Web.WebPages.OAuth;
 using WebMatrix.WebData;
 using UserAuthNew.Filters;
 using UserAuthNew.Models;
+using System.Web.UI;
 
 namespace UserAuthNew.Controllers
 {
@@ -28,8 +33,7 @@ namespace UserAuthNew.Controllers
         [AllowAnonymous]
         public ActionResult Login(string returnUrl)
         {
-            if (returnUrl == null)
-                returnUrl = "~/Account/UserProfile";
+       
             ViewBag.ReturnUrl = returnUrl;
             return View();
         }
@@ -44,7 +48,7 @@ namespace UserAuthNew.Controllers
         {
             if (ModelState.IsValid && WebSecurity.Login(model.UserName, model.Password, persistCookie: model.RememberMe))
             {
-                return RedirectToLocal(returnUrl);
+                return RedirectToLocal("~/Account/UserProfile");
             }
 
             // Появление этого сообщения означает наличие ошибки; повторное отображение формы
@@ -232,7 +236,7 @@ namespace UserAuthNew.Controllers
 
             if (OAuthWebSecurity.Login(result.Provider, result.ProviderUserId, createPersistentCookie: false))
             {
-                return RedirectToLocal(returnUrl);
+                return RedirectToLocal("~/Account/UserProfile");
             }
 
             if (User.Identity.IsAuthenticated)
@@ -425,46 +429,60 @@ namespace UserAuthNew.Controllers
             }
         }
 
-        [HttpPost]
-        public ActionResult ImageUpload(HttpPostedFileBase file)
+        private ImageUploadResult uploadToCloudinary(string path, string fileName)
         {
-            if (file != null)
+            var cloudinary = new Cloudinary(
+                new Account(
+                    "cloud",
+                    "appId",
+                    "appSecret"));
+            var uploadParams = new ImageUploadParams()
             {
-                var cloudinary = new Cloudinary(
-                    new Account(
-                        "userauth",
-                        "987284753385827",
-                        "wBdEODvsjZAb7MXWuGAtDonIcTI"));
+                File = new FileDescription(@path),
+                PublicId = fileName,
+            };
+            var uploadResult = cloudinary.Upload(uploadParams);
+            return uploadResult;
 
-                // здесь надо найти путь из файла
+        }
 
-                string fileName = file.FileName;
-                string path = Path.Combine(Server.MapPath("~/Images/Temp"), fileName);
-                file.SaveAs(path);
+        private void AddToDB(ImageUploadResult uploadResult)
+        {
+            string imageUrl = uploadResult.Uri.ToString();
+            Image uploadedImage = new Image
+            {
+                PhotoUrl = imageUrl,
+                UserId = GetUserId(User.Identity.Name)
+            };
+            using (ImageEntities db = new ImageEntities())
+            {
+                db.Images.Add(uploadedImage);
+                db.SaveChanges();
+            }            
+        }
 
-                var uploadParams = new ImageUploadParams()
-                {
-                    File = new FileDescription(@path),
-                    PublicId = fileName,
-                };
+        [HttpPost]
+        public ActionResult FileImageUpload(HttpPostedFileBase file)
+        {
+            if (file == null)
+                return RedirectToAction("UserProfile", "Account"); ;
+            string fileName = file.FileName;
+            string path = Path.Combine(Server.MapPath("~/Images/Temp"), fileName);
+            file.SaveAs(path);
+            var uploadResult = uploadToCloudinary(path, fileName);
+            AddToDB(uploadResult);
+            return RedirectToAction("UserProfile", "Account");
+        }
 
-                var uploadResult = cloudinary.Upload(uploadParams);
+        [HttpPost]
+        public ActionResult UrlImageUpload(string url)
+        {
+            if (url == null)
+                return RedirectToAction("UserProfile", "Account");
 
-                string imageUrl = uploadResult.Uri.ToString();
-
-
-                Image uploadedImage = new Image
-                {
-                    PhotoUrl = imageUrl,
-                    UserId = GetUserId(User.Identity.Name)
-                };
-
-                using (ImageEntities db = new ImageEntities())
-                {
-                    db.Images.Add(uploadedImage);
-                    db.SaveChanges();
-                }
-            }
+            string fileName = url.Substring(url.LastIndexOf("/")+1);
+            var uploadResult = uploadToCloudinary(url, fileName);
+            AddToDB(uploadResult);
             return RedirectToAction("UserProfile", "Account");
         }
 
@@ -492,11 +510,106 @@ namespace UserAuthNew.Controllers
             }            
         }
 
+        public static T[] MakeRequest<T>(string requestUrl)
+        {
+            try
+            {
+                HttpWebRequest request = WebRequest.Create(requestUrl) as HttpWebRequest;
+                using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
+                {
+                    if (response.StatusCode != HttpStatusCode.OK)
+                        throw new Exception(String.Format(
+                        "Server error (HTTP {0}: {1}).",
+                        response.StatusCode,
+                        response.StatusDescription));
+                    DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(T[]));
+
+                    StreamReader reader = new StreamReader(response.GetResponseStream());
+                    string text = reader.ReadToEnd();
+
+                    byte[] byteArray = System.Text.Encoding.ASCII.GetBytes(text);
+                    MemoryStream stream = new MemoryStream(byteArray);
+
+                    object objResponse = jsonSerializer.ReadObject(stream);
+                    T[] jsonResponse = objResponse as T[];
+                    return jsonResponse;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return null;
+            }
+        }
+
         [Authorize]
+
+  /*      public ActionResult ImportSiteOBoobs()
+        {
+            string baseApiUrl = "http://api.oboobs.ru";
+
+            string UrlRequest = baseApiUrl + "/boobs/count/";
+            CountResponse response = MakeRequest<CountResponse>(UrlRequest)[0];
+
+            using (ImageEntities db = new ImageEntities())
+            {
+                for (int i = 1; i < 5; ++i)
+                {
+                    UrlRequest = baseApiUrl + "/boobs/get/" + i.ToString() + "/";
+
+                    ImageResponse[] imageResponse = MakeRequest<ImageResponse>(UrlRequest);
+                    if (imageResponse.Length > 0)
+                    {
+                        Image uploadedImage = new Image
+                        {
+                            PhotoUrl = "http://media.oboobs.ru/" + imageResponse[0].PreviewUrl,
+                            UserId = GetUserId(User.Identity.Name)
+                        };
+
+                        db.Images.Add(uploadedImage);
+                    }
+
+                    db.SaveChanges();
+                }                
+            }            
+        
+
+            return RedirectToAction("UserGallery", "Account");
+        }*/
+
+        [Authorize]
+    
         public ActionResult ImportSiteOBoobs()
         {
+            string baseApiUrl = "http://api.oboobs.ru";
 
-            return View();
+            string UrlRequest = baseApiUrl + "/boobs/count/";
+            CountResponse response = MakeRequest<CountResponse>(UrlRequest)[0];
+            List<Image> list = new List<Image>();
+            Random rnd = new Random();
+            int begin = rnd.Next(1, 10000);
+           
+            for (int i = begin; i   < begin + 10; ++i)
+            {
+                UrlRequest = baseApiUrl + "/boobs/get/" + i.ToString() + "/";
+
+                ImageResponse[] imageResponse = MakeRequest<ImageResponse>(UrlRequest);
+                if (imageResponse.Length > 0)
+                {
+                    Image uploadedImage = new Image
+                    {
+                        PhotoUrl = "http://media.oboobs.ru/" + imageResponse[0].PreviewUrl,
+                        UserId = GetUserId(User.Identity.Name)
+                    };
+
+                    list.Add(uploadedImage);   
+                }
+
+
+            }
+
+            return View(list);
         }
+
     }
 }

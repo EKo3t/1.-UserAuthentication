@@ -20,15 +20,15 @@ namespace UserAuthNew
             //    clientSecret: "");
 
             OAuthWebSecurity.RegisterTwitterClient(
-                consumerKey: "Sj2eU4AAh9NSqVLoMERItP9Hy",
-                consumerSecret: "SjNVG4cuDMYHEkRcxGbxm9cHPCuOTpludQVZhWGsH70JGPEskl");
+                consumerKey: "",
+                consumerSecret: "");
 
-            OAuthWebSecurity.RegisterFacebookClient(
-                appId: "364141163710817",
-                appSecret: "d368c6bfc4b8341282890671018a4f95");
+            OAuthWebSecurity.RegisterFacebookClient(             
+                appId: "",
+                appSecret: "");
 
             OAuthWebSecurity.RegisterClient(
-                client: new VKontakteAuthenticationClient("4595168", "ezbp6Xmc5QvcjFeLyVff"),
+                client: new VKontakteAuthenticationClient("appId", "appSecret"),
                 displayName: "ВКонтакте",
                 extraData: null);
 

@@ -2,4 +2,20 @@
     ViewBag.Title = "ImportSiteOBoobs";
 }
 
-<h2>ImportSiteOBoobs</h2>
+@model IList<UserAuthNew.Models.Image>
+<table>
+    <tr>
+        <td>
+            @foreach (var item in Model)
+            {
+                using (Html.BeginForm("UrlImageUpload", "Account", new { url = item.PhotoUrl}, FormMethod.Post))
+                {
+                    <a href=@item.PhotoUrl>
+                        <img alt="@item.UserId" src="@item.PhotoUrl" height="300" />
+                    </a>
+                    <input type="submit" name="UploadImage" value="UploadImage" />
+                }
+            }
+        </td>
+    </tr>
+</table>
